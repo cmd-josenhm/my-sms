@@ -1,0 +1,25 @@
+{
+  "name": "my-sms",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "my-sms — chat web épuré entre amis, en temps réel.",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev:db": "node scripts/dev-db.js",
+    "migrate": "npm run migrate -w server",
+    "seed": "npm run seed -w server",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "smoke": "node scripts/smoke.js",
+    "smoke:e2e": "node scripts/e2e-proxy.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "embedded-postgres": "^18.4.0-beta.17"
+  }
+}
