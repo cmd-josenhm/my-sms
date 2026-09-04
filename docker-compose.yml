@@ -1,0 +1,46 @@
+# my-sms — stack de production
+#   docker compose up -d --build
+# Le serveur expose l'API + l'interface (build Vite) sur le port 4000.
+#
+# Pour plusieurs instances (passage à l'échelle) :
+#   1. lancer `redis`
+#   2. définir REDIS_URL sur CHAQUE instance de `app`
+#   3. placer un équilibreur de charge HTTP + WebSocket devant les instances
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mysms
+      POSTGRES_PASSWORD: mysms
+      POSTGRES_DB: mysms
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mysms -d mysms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    profiles: ["scale"]
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://mysms:mysms@db:5432/mysms
+      # REDIS_URL: redis://redis:6379   # à activer (profile "scale")
+      COOKIE_SECURE: "false"            # passer à "true" derrière HTTPS
+    ports:
+      - "4000:4000"
+
+volumes:
+  pgdata:
